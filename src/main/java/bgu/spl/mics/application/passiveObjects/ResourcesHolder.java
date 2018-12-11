@@ -2,6 +2,8 @@ package bgu.spl.mics.application.passiveObjects;
 
 import bgu.spl.mics.Future;
 
+import java.util.concurrent.Semaphore;
+
 /**
  * Passive object representing the resource manager.
  * You must not alter any of the given public methods of this class.
@@ -12,13 +14,21 @@ import bgu.spl.mics.Future;
  * You can add ONLY private methods and fields to this class.
  */
 public class ResourcesHolder {
-	
-	/**
+
+    private Semaphore semaphore;
+	private static class singeltonHolder{
+		private static ResourcesHolder instance = new ResourcesHolder();
+	}
+
+    public ResourcesHolder() {
+
+    }
+
+    /**
      * Retrieves the single instance of this class.
      */
 	public static ResourcesHolder getInstance() {
-		//TODO: Implement this
-		return null;
+		return singeltonHolder.instance;
 	}
 	
 	/**

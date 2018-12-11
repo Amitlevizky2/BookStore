@@ -1,6 +1,12 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Vector;
 
 /**
  * Passive data-object representing the store inventory.
@@ -13,13 +19,17 @@ package bgu.spl.mics.application.passiveObjects;
  * You can add ONLY private fields and methods to this class as you see fit.
  */
 public class Inventory {
+	private Vector <BookInventoryInfo> booksInventoryInfo;
+
+	private static class InventoryHolder{
+		private static Inventory instance = new Inventory();
+	}
 
 	/**
      * Retrieves the single instance of this class.
      */
 	public static Inventory getInstance() {
-		//TODO: Implement this
-		return new Inventory();
+		return InventoryHolder.instance;
 	}
 	
 	/**
@@ -30,7 +40,8 @@ public class Inventory {
      * 						of the inventory.
      */
 	public void load (BookInventoryInfo[ ] inventory ) {
-		
+		booksInventoryInfo = new Vector<>();
+		this.booksInventoryInfo.addAll(Arrays.asList(inventory));
 	}
 	
 	/**
@@ -42,8 +53,11 @@ public class Inventory {
      * 			second should reduce by one the number of books of the desired type.
      */
 	public OrderResult take (String book) {
-		
-		return null;
+			BookInventoryInfo temp = findBookByTitle(book);
+			if (temp == null)
+				return OrderResult.NOT_IN_STOCK;
+			temp.reduceAmountInInventory();
+			return OrderResult.SUCCESFULLY_TAKEN;
 	}
 	
 	
@@ -55,10 +69,26 @@ public class Inventory {
      * @return the price of the book if it is available, -1 otherwise.
      */
 	public int checkAvailabiltyAndGetPrice(String book) {
-		//TODO: Implement this
-		return -1;
+		BookInventoryInfo temp = findBookByTitle(book);
+		if(temp == null)
+			return -1;
+		return temp.getPrice();
 	}
-	
+
+	/**
+	 * By given a book title, will return the book if this book exists in the inventory, else, return null
+	 * @param book
+	 * @return temp
+	 */
+	private BookInventoryInfo findBookByTitle(String book){
+		for (BookInventoryInfo temp : booksInventoryInfo) {
+			if (book.equals(temp.getBookTitle())) {
+				return temp;
+			}
+		}
+		return null;
+	}
+
 	/**
      * 
      * <p>
@@ -68,6 +98,34 @@ public class Inventory {
      * This method is called by the main method in order to generate the output.
      */
 	public void printInventoryToFile(String filename){
-		//TODO: Implement this
+		HashMap<String,Integer> inventoryHashMap = collectionToHashMap();
+		if (inventoryHashMap == null)
+			return;
+		try{
+			FileOutputStream fos = new FileOutputStream(filename);
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(inventoryHashMap);
+			oos.close();
+			fos.close();
+		}catch(IOException e){
+			e.printStackTrace();
+			System.out.println("Could not write hashmap to the file");
+		}
 	}
+
+	/**
+	 * Creates the HashMap, from the BookInventoryCollection, that will be written to a file later
+	 * @return	HashMap representing the info (Book Title and Amount) of every book in Inventory
+	 */
+	private HashMap<String, Integer> collectionToHashMap(){
+		if(booksInventoryInfo.size() == 0)
+			return null;
+		HashMap<String, Integer> hmap = new HashMap<>();
+		for (BookInventoryInfo temp: booksInventoryInfo) {
+			hmap.put(temp.getBookTitle(), temp.getAmountInInventory());
+		}
+		return hmap;
+	}
+
+
 }

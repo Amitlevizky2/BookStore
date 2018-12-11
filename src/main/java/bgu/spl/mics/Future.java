@@ -10,13 +10,13 @@ import java.util.concurrent.TimeUnit;
  * Only private methods may be added to this class.
  * No public constructor is allowed except for the empty constructor.
  */
-public class Future<T> {
-	
+public class Future<T>  {
+	private T result;
 	/**
 	 * This should be the the only public constructor in this class.
 	 */
 	public Future() {
-		//TODO: implement this
+		this.result = null;
 	}
 	
 	/**
@@ -25,42 +25,64 @@ public class Future<T> {
      * not been completed.
      * <p>
      * @return return the result of type T if it is available, if not wait until it is available.
-     * 	       
+     *
      */
 	public T get() {
-		//TODO: implement this.
-		return null;
+	    synchronized (this.result) {
+            while (!isDone()) {
+                try {
+                    this.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            this.result.notifyAll();
+            return this.result;
+        }
 	}
 	
 	/**
      * Resolves the result of this Future object.
      */
 	public void resolve (T result) {
-		//TODO: implement this.
+
+            if (this.result == null) {
+                this.result = result;
+            }
+
 	}
 	
 	/**
      * @return true if this object has been resolved, false otherwise
      */
-	public boolean isDone() {
-		//TODO: implement this.
-		return true;
-	}
+	public synchronized boolean isDone() {
+        return result != null;
+    }
 	
 	/**
      * retrieves the result the Future object holds if it has been resolved,
      * This method is non-blocking, it has a limited amount of time determined
      * by {@code timeout}
      * <p>
-     * @param timout 	the maximal amount of time units to wait for the result.
+     * @param timeout 	the maximal amount of time units to wait for the result.
      * @param unit		the {@link TimeUnit} time units to wait.
      * @return return the result of type T if it is available, if not, 
      * 	       wait for {@code timeout} TimeUnits {@code unit}. If time has
      *         elapsed, return null.
      */
 	public T get(long timeout, TimeUnit unit) {
-		//TODO: implement this.
-		return null;
+	    long timeToWait = TimeUnit.MILLISECONDS.convert(timeout, unit);
+		synchronized (this.result)
+        {
+            if (this.result != null)
+                return result;
+            try {
+                this.result.wait(timeToWait);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return this.result;
+        }
 	}
 
 }

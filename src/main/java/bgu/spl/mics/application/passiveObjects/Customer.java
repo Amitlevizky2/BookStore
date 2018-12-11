@@ -84,5 +84,11 @@ public class Customer {
 		// TODO Implement this
 		return 0;
 	}
+
+	public void chargeCustomer(int amount){
+		if(amount <= this.availableCreditAmount){
+			this.availableCreditAmount -= amount;
+		}
+	}
 	
 }

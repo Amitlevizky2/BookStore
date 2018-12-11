@@ -7,18 +7,17 @@ package bgu.spl.mics;
  */
 public class MessageBusImpl implements MessageBus {
 
-private static class SingeltonHolder{
-	private static MessageBusImpl msgBusSingelton = new MessageBusImpl();
-}
+    private static class MessageBusSingelton{
+        private static MessageBusImpl instance = new MessageBusImpl();
+    }
 
-public static  MessageBusImpl getInstance(){
-	return SingeltonHolder.msgBusSingelton;
-}
-
+    public static MessageBusImpl getInstance()
+    {
+        return MessageBusSingelton.instance;
+    }
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override

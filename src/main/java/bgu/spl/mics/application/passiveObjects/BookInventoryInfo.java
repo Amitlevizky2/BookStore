@@ -19,17 +19,6 @@ public class BookInventoryInfo {
         this.price = price;
     }
 
-    public void setBookTitle(String bookTitle) {
-        this.bookTitle = bookTitle;
-    }
-
-    public void setAmountInInventory(int amountInInventory) {
-        this.amountInInventory = amountInInventory;
-    }
-
-    public void setPrice(int price) {
-        this.price = price;
-    }
 
 	/**
      * Retrieves the title of this book.
@@ -37,8 +26,7 @@ public class BookInventoryInfo {
      * @return The title of this book.   
      */
 	public String getBookTitle() {
-		// TODO Implement this
-		return null;
+		return this.bookTitle;
 	}
 
 	/**
@@ -47,8 +35,7 @@ public class BookInventoryInfo {
      * @return amount of available books.      
      */
 	public int getAmountInInventory() {
-		// TODO Implement this
-		return 0;
+		return this.amountInInventory;
 	}
 
 	/**
@@ -57,11 +44,10 @@ public class BookInventoryInfo {
      * @return the price of the book.
      */
 	public int getPrice() {
-		// TODO Implement this
-		return 0;
+		return this.price;
 	}
-	
-	
 
-	
+	public void reduceAmountInInventory() {
+		this.amountInInventory--;
+	}
 }

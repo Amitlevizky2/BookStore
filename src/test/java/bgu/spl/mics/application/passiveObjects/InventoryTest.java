@@ -3,6 +3,14 @@ package bgu.spl.mics.application.passiveObjects;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
 import static org.junit.Assert.*;
 
 public class InventoryTest {
@@ -66,6 +74,40 @@ public class InventoryTest {
 
     @Test
     public void printInventoryToFile() {
+        BookInventoryInfo[] inventoryInfo = new BookInventoryInfo[3];
+        inventoryInfo[0] = new BookInventoryInfo("Harry Potter", 1, 100);
+        inventoryInfo[1] = new BookInventoryInfo("The secret", 4, 300);
+        inventoryInfo[2] = new BookInventoryInfo("The dddddd", 2, 500);
+        inventory.load(inventoryInfo);
+        inventory.printInventoryToFile("checkFile.ser");
 
+
+        HashMap<Integer, String> map = null;
+        try
+        {
+            FileInputStream fis = new FileInputStream("checkFile.ser");
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            map = (HashMap) ois.readObject();
+            ois.close();
+            fis.close();
+        }catch(IOException ioe)
+        {
+            ioe.printStackTrace();
+            return;
+        }catch(ClassNotFoundException c)
+        {
+            System.out.println("Class not found");
+            c.printStackTrace();
+            return;
+        }
+        System.out.println("Deserialized HashMap..");
+        // Display content using Iterator
+        Set set = map.entrySet();
+        Iterator iterator = set.iterator();
+        while(iterator.hasNext()) {
+            Map.Entry mentry = (Map.Entry)iterator.next();
+            System.out.print("key: "+ mentry.getKey() + " & Value: ");
+            System.out.println(mentry.getValue());
+        }
     }
 }

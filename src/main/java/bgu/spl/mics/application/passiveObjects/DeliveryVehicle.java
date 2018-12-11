@@ -22,8 +22,7 @@ public class DeliveryVehicle {
      * Retrieves the license of this delivery vehicle.   
      */
 	public int getLicense() {
-		// TODO Implement this
-		return 0;
+		return license;
 	}
 	
 	/**
@@ -32,8 +31,7 @@ public class DeliveryVehicle {
      * @return Number of ticks needed for 1 Km.
      */
 	public int getSpeed() {
-		// TODO Implement this
-		return 0;
+		return 0;//TODO:Need to calculate it by ticks
 	}
 	
 	/**
@@ -44,6 +42,10 @@ public class DeliveryVehicle {
      * @param distance	The distance from the store to the customer.
      */
 	public void deliver(String address, int distance) {
-		// TODO Implement this
+		try {
+			Thread.currentThread().sleep(speed*distance);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 }

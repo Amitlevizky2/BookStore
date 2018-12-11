@@ -39,14 +39,15 @@ public class MoneyRegister {
      * @param r		The receipt to save in the money register.
      */
 	public void file (OrderReceipt r) {
-		//TODO: Implement this.
+		if (r != null) {
+			orderReceipts.add(r);
+		}
 	}
 	
 	/**
      * Retrieves the current total earnings of the store.  
      */
 	public int getTotalEarnings() {
-		//TODO: Implement this
 		return this.totalEarnings;
 	}
 	
@@ -56,7 +57,8 @@ public class MoneyRegister {
      * @param amount 	amount to charge
      */
 	public void chargeCreditCard(Customer c, int amount) {
-		// TODO Implement this
+		c.chargeCustomer(amount);
+		totalEarnings+= amount;
 	}
 	
 	/**

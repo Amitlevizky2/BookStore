@@ -160,7 +160,8 @@ public abstract class MicroService implements Runnable {
         while (!terminated) {
                 try {
                     Message m = msgBus.awaitMessage(this);
-                    suitCallback.get(m.getClass()).call(m);
+                    if (m != null)
+                        suitCallback.get(m.getClass()).call(m);
                 }catch (InterruptedException IE){
                     terminate();
                     System.out.println(this.getName() + " has interrupted");

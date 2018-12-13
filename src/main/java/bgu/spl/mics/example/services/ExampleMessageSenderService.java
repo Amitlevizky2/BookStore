@@ -28,10 +28,11 @@ public class ExampleMessageSenderService extends MicroService {
             sendBroadcast(new ExampleBroadcast(getName()));
             System.out.println("Sender " + getName() + " publish an broadcast and terminate");
             terminate();
-        } else {
-            Future<String> futureObject = (Future<String>)sendEvent(new ExampleEvent(getName()));
+        }
+        else {
+            Future<String> futureObject = sendEvent(new ExampleEvent(getName()));
             if (futureObject != null) {
-            	String resolved = futureObject.get(100, TimeUnit.MILLISECONDS);
+            	String resolved = futureObject.get(100000, TimeUnit.MILLISECONDS);
             	if (resolved != null) {
             		System.out.println("Completed processing the event, its result is \"" + resolved + "\" - success");
             	}

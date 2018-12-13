@@ -57,10 +57,8 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> void complete(Event<T> e, T result) {
-        synchronized (eventFutureMap.get(e)) {
-            eventFutureMap.get(e).resolve(result);//TODO: need Sync??
-            eventFutureMap.get(e).notifyAll();
-        }
+    	Future <T> future = eventFutureMap.get(e);
+            future.resolve(result);//TODO: need Sync??
 	}
 
 	@Override
@@ -74,34 +72,19 @@ public class MessageBusImpl implements MessageBus {
                  addMessageToMicroService(b, micro);
              }
 
-//		if(tempMicroServiceQueue!=null) {
-//            synchronized (tempMicroServiceQueue) {
-//                for (MicroService tempMicroService : tempMicroServiceQueue) {
-//                    Queue<Message> tempMessagesQueue = microServiceQueueMap.get(tempMicroService);
-//                    if (tempMessagesQueue == null) {
-//                        synchronized (tempMessagesQueue) {
-//                            tempMessagesQueue.add(b);
-//                        }
-//                    }
-//                }
-//            }
-//        }
 	}
 	private void addMessageToMicroService(Message msg, MicroService m){
             LinkedBlockingQueue<Message> tempMicroQueue = microServiceQueueMap.get(m);
             if (tempMicroQueue == null)
                 return;
-            synchronized (tempMicroQueue) {
+
                 try {
                     tempMicroQueue.put(msg);
             } catch(InterruptedException e){
                 e.printStackTrace();
             }
-        }
+
     }
-
-
-
 
 	
 	@Override
@@ -113,21 +96,16 @@ public class MessageBusImpl implements MessageBus {
 
         try {
             m = tempMicroServiceQueue.take();
+            tempMicroServiceQueue.put(m);
         } catch (InterruptedException e1) {
             e1.printStackTrace();
         }
-        addMessageToMicroService(e, m);
-//		synchronized (tempMicroServiceQueue){
-//			try {
-//				m = tempMicroServiceQueue.take();
-//			} catch (InterruptedException e1) {
-//				e1.printStackTrace();
-//			}
-//			tempMicroServiceQueue.add(m);
-//			microServiceQueueMap.get(m).add(e);
-//		}
 		Future<T> f1 = new Future<>();
-		eventFutureMap.putIfAbsent(e, f1);
+
+		if (m != null) {
+			eventFutureMap.putIfAbsent(e, f1);
+			addMessageToMicroService(e, m);
+		}
 		LinkedBlockingQueue<Future> tempFutureQueue =  microServiceFutureMap.get(m);
 		tempFutureQueue.add(f1);
 		return f1;
@@ -136,29 +114,27 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void register(MicroService m) {
 		if (microServiceQueueMap.get(m) == null) {
-
-
-			microServiceQueueMap.putIfAbsent(m, new LinkedBlockingQueue<Message>());
-			microServiceFutureMap.putIfAbsent(m, new LinkedBlockingQueue<Future>());
+			microServiceQueueMap.putIfAbsent(m, new LinkedBlockingQueue<>());
+			microServiceFutureMap.putIfAbsent(m, new LinkedBlockingQueue<>());
 		}
 	}
 
 	@Override
 	public void unregister(MicroService m) {
-    	synchronized (m){
+
 			LinkedBlockingQueue<Future> tempFutureQueue = microServiceFutureMap.get(m);
 			for (Future f1 : tempFutureQueue){
 			    if(!f1.isDone())
 				    f1.resolve(null);
-			    tempFutureQueue.remove(f1);
+			    //tempFutureQueue.remove(f1);
 			}
+			microServiceFutureMap.remove(m);
 
             for (Class cls:roundRobinMap.keySet()) {
                 LinkedBlockingQueue<MicroService> tempMicroServiceQueue = roundRobinMap.get(cls);
-                tempMicroServiceQueue.remove(cls);
+                tempMicroServiceQueue.remove(m);
             }
 
-		}
 	}
 
 	@Override

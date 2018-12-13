@@ -25,6 +25,7 @@ public class MessageBusImpl implements MessageBus {
 		this.roundRobinMap = new ConcurrentHashMap<>();
 		this.microServiceQueueMap = new ConcurrentHashMap<>();
 		this.eventFutureMap = new ConcurrentHashMap<>();
+		this.microServiceFutureMap = new ConcurrentHashMap<>();
 	}
 
 	public static MessageBusImpl getInstance()
@@ -33,16 +34,19 @@ public class MessageBusImpl implements MessageBus {
     }
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-    	Queue tempQueue = microServiceQueueMap.get(m);
-    	synchronized (tempQueue) {//TODO: Check if needed
-    		if(!tempQueue.contains(type))
-				tempQueue.add(type);
-		}
+    	Queue tempQueue = roundRobinMap.get(type);
+    	if(tempQueue == null) {
+            synchronized (tempQueue) {//TODO: Check if needed
+                if (!tempQueue.contains(type))
+                    tempQueue.add(type);
+            }
+        }
 	}
 
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-		Queue tempQueue = microServiceQueueMap.get(m);
+		Queue tempQueue = roundRobinMap.get(m);
+		if (tempQueue != null)
 		synchronized (tempQueue) {//TODO: Check if needed
 			if(!tempQueue.contains(type))
 				tempQueue.add(type);
@@ -59,15 +63,18 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void sendBroadcast(Broadcast b) {
 		Queue<MicroService> tempMicroServiceQueue = roundRobinMap.get(b.getClass());
-		synchronized (tempMicroServiceQueue){
-			for (MicroService tempMicroService : tempMicroServiceQueue)
-			{
-				Queue<Message> tempMessagesQueue = microServiceQueueMap.get(tempMicroService);
-				synchronized (tempMessagesQueue) {
-					tempMessagesQueue.add(b);
-				}
-			}
-		}
+		if(tempMicroServiceQueue!=null) {
+            synchronized (tempMicroServiceQueue) {
+                for (MicroService tempMicroService : tempMicroServiceQueue) {
+                    Queue<Message> tempMessagesQueue = microServiceQueueMap.get(tempMicroService);
+                    if (tempMessagesQueue == null) {
+                        synchronized (tempMessagesQueue) {
+                            tempMessagesQueue.add(b);
+                        }
+                    }
+                }
+            }
+        }
 	}
 
 	
@@ -75,7 +82,7 @@ public class MessageBusImpl implements MessageBus {
 	public <T> Future<T> sendEvent(Event<T> e) {
     	MicroService m = null;
 		LinkedBlockingQueue<MicroService> tempMicroServiceQueue = roundRobinMap.get(e.getClass());
-		if(tempMicroServiceQueue.isEmpty())
+		if(tempMicroServiceQueue == null)
 			return null;
 		synchronized (tempMicroServiceQueue){
 			try {
@@ -113,8 +120,17 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException {
-    	//while (microServiceQueueMap.get(m).isEmpty()) m.wait();
-		return null;
+        Message msgToSend = null;
+        try{
+            LinkedBlockingQueue<Message> tempMessageQueue = microServiceQueueMap.get(m);
+            if (tempMessageQueue == null)
+                return null;
+            msgToSend = tempMessageQueue.take();
+        }catch (InterruptedException e){
+            Thread.currentThread().interrupt();
+            return null;
+        }
+		return msgToSend;
 	}
 
 	

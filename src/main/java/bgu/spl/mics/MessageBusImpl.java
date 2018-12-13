@@ -1,6 +1,5 @@
 package bgu.spl.mics;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,6 +15,7 @@ public class MessageBusImpl implements MessageBus {
 	private Map<MicroService, LinkedBlockingQueue<Message>> microServiceQueueMap;
 	private Map<Message, Future> eventFutureMap;
 	private Map<MicroService, LinkedBlockingQueue<Future>> microServiceFutureMap;
+	private Object obj = new Object();
 
     private static class MessageBusSingelton{
         private static MessageBusImpl instance = new MessageBusImpl();
@@ -34,77 +34,113 @@ public class MessageBusImpl implements MessageBus {
     }
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-    	Queue tempQueue = roundRobinMap.get(type);
-    	if(tempQueue == null) {
-            synchronized (tempQueue) {//TODO: Check if needed
-                if (!tempQueue.contains(type))
-                    tempQueue.add(type);
-            }
-        }
-	}
+    	subscribe(type, m);
+     }
 
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-		Queue tempQueue = roundRobinMap.get(m);
-		if (tempQueue != null)
-		synchronized (tempQueue) {//TODO: Check if needed
-			if(!tempQueue.contains(type))
-				tempQueue.add(type);
-		}
+    	subscribe(type, m);
+	}
 
+	private void subscribe(Class type, MicroService m) {
+		if (type == null || m == null)
+			return;
+		synchronized (obj) {
+			roundRobinMap.putIfAbsent(type, new LinkedBlockingQueue<MicroService>());
+            try {
+                roundRobinMap.get(type).put(m);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
 	}
 
 	@Override
 	public <T> void complete(Event<T> e, T result) {
-		eventFutureMap.get(e).resolve(result);//TODO: need Sync??
-		result.notifyAll();
+        synchronized (eventFutureMap.get(e)) {
+            eventFutureMap.get(e).resolve(result);//TODO: need Sync??
+            eventFutureMap.get(e).notifyAll();
+        }
 	}
 
 	@Override
 	public void sendBroadcast(Broadcast b) {
+        if(b == null)
+            return;
 		Queue<MicroService> tempMicroServiceQueue = roundRobinMap.get(b.getClass());
-		if(tempMicroServiceQueue!=null) {
-            synchronized (tempMicroServiceQueue) {
-                for (MicroService tempMicroService : tempMicroServiceQueue) {
-                    Queue<Message> tempMessagesQueue = microServiceQueueMap.get(tempMicroService);
-                    if (tempMessagesQueue == null) {
-                        synchronized (tempMessagesQueue) {
-                            tempMessagesQueue.add(b);
-                        }
-                    }
-                }
+		if (tempMicroServiceQueue == null)
+		    return;
+        for (MicroService micro: tempMicroServiceQueue) {
+                 addMessageToMicroService(b, micro);
+             }
+
+//		if(tempMicroServiceQueue!=null) {
+//            synchronized (tempMicroServiceQueue) {
+//                for (MicroService tempMicroService : tempMicroServiceQueue) {
+//                    Queue<Message> tempMessagesQueue = microServiceQueueMap.get(tempMicroService);
+//                    if (tempMessagesQueue == null) {
+//                        synchronized (tempMessagesQueue) {
+//                            tempMessagesQueue.add(b);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+	}
+	private void addMessageToMicroService(Message msg, MicroService m){
+            LinkedBlockingQueue<Message> tempMicroQueue = microServiceQueueMap.get(m);
+            if (tempMicroQueue == null)
+                return;
+            synchronized (tempMicroQueue) {
+                try {
+                    tempMicroQueue.put(msg);
+            } catch(InterruptedException e){
+                e.printStackTrace();
             }
         }
-	}
+    }
+
+
+
 
 	
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
-    	MicroService m = null;
+        MicroService m = null;
 		LinkedBlockingQueue<MicroService> tempMicroServiceQueue = roundRobinMap.get(e.getClass());
-		if(tempMicroServiceQueue == null)
-			return null;
-		synchronized (tempMicroServiceQueue){
-			try {
-				m = tempMicroServiceQueue.take();
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
-			}
-			tempMicroServiceQueue.add(m);
-			microServiceQueueMap.get(m).add(e);
-		}
+		if (tempMicroServiceQueue == null || tempMicroServiceQueue.isEmpty())
+		    return null;
 
+        try {
+            m = tempMicroServiceQueue.take();
+        } catch (InterruptedException e1) {
+            e1.printStackTrace();
+        }
+        addMessageToMicroService(e, m);
+//		synchronized (tempMicroServiceQueue){
+//			try {
+//				m = tempMicroServiceQueue.take();
+//			} catch (InterruptedException e1) {
+//				e1.printStackTrace();
+//			}
+//			tempMicroServiceQueue.add(m);
+//			microServiceQueueMap.get(m).add(e);
+//		}
 		Future<T> f1 = new Future<>();
-		eventFutureMap.put(e, f1);
+		eventFutureMap.putIfAbsent(e, f1);
 		LinkedBlockingQueue<Future> tempFutureQueue =  microServiceFutureMap.get(m);
 		tempFutureQueue.add(f1);
-		return (new Future<>());
+		return f1;
 	}
 
 	@Override
 	public void register(MicroService m) {
-    	microServiceQueueMap.put(m, new LinkedBlockingQueue<>());
-    	microServiceFutureMap.put(m, new LinkedBlockingQueue<>());
+		if (microServiceQueueMap.get(m) == null) {
+
+
+			microServiceQueueMap.putIfAbsent(m, new LinkedBlockingQueue<Message>());
+			microServiceFutureMap.putIfAbsent(m, new LinkedBlockingQueue<Future>());
+		}
 	}
 
 	@Override
@@ -112,8 +148,15 @@ public class MessageBusImpl implements MessageBus {
     	synchronized (m){
 			LinkedBlockingQueue<Future> tempFutureQueue = microServiceFutureMap.get(m);
 			for (Future f1 : tempFutureQueue){
-				f1.resolve(null);
+			    if(!f1.isDone())
+				    f1.resolve(null);
+			    tempFutureQueue.remove(f1);
 			}
+
+            for (Class cls:roundRobinMap.keySet()) {
+                LinkedBlockingQueue<MicroService> tempMicroServiceQueue = roundRobinMap.get(cls);
+                tempMicroServiceQueue.remove(cls);
+            }
 
 		}
 	}

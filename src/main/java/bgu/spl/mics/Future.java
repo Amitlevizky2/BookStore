@@ -13,12 +13,14 @@ import java.util.concurrent.TimeUnit;
 public class Future<T>  {
     private boolean isResolved;
 	private T result;
+	private Object lockResult;
 	/**
 	 * This should be the the only public constructor in this class.
 	 */
 	public Future() {
 		this.result = null;
 		this.isResolved = false;
+		this.lockResult = new Object();
 	}
 	
 	/**
@@ -30,15 +32,15 @@ public class Future<T>  {
      *
      */
 	public T get() {
-	    synchronized (this.result) {
+	    synchronized (lockResult) {
             while (!isDone()) {
                 try {
-                    this.wait();
+                    this.lockResult.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            this.result.notifyAll();
+            this.lockResult.notifyAll();
             return this.result;
         }
 	}
@@ -47,16 +49,17 @@ public class Future<T>  {
      * Resolves the result of this Future object.
      */
 	public void resolve (T result) {
-
-	    this.result = result;
-	    isResolved = true;
-        result.notifyAll();
+	    synchronized (lockResult) {
+            this.result = result;
+            isResolved = true;
+            lockResult.notifyAll();
+        }
 	}
 	
 	/**
      * @return true if this object has been resolved, false otherwise
      */
-	public synchronized boolean isDone() {
+	public boolean isDone() {
         return isResolved;
     }
 	
@@ -73,12 +76,12 @@ public class Future<T>  {
      */
 	public T get(long timeout, TimeUnit unit) {
 	    long timeToWait = TimeUnit.MILLISECONDS.convert(timeout, unit);
-		synchronized (this.result)
+		synchronized (this.lockResult)
         {
-            if (this.result != null)
+            if (isResolved)
                 return result;
             try {
-                this.result.wait(timeToWait);
+                this.lockResult.wait(timeToWait);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

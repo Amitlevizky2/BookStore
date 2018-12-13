@@ -165,11 +165,11 @@ public abstract class MicroService implements Runnable {
                     terminate();
                     System.out.println(this.getName() + " has interrupted");
                 }
-                if(Thread.currentThread().isInterrupted())
-                    terminate();
-                msgBus.unregister(this);
-            System.out.println(getName() + " unregistered");
+//                if(Thread.currentThread().isInterrupted())
+//                    terminate();
         }
+        msgBus.unregister(this);
+        //System.out.println(getName() + " unregistered");
 
     }
 

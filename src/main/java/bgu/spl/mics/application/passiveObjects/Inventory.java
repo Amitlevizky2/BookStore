@@ -7,6 +7,7 @@ import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Passive data-object representing the store inventory.
@@ -24,7 +25,6 @@ public class Inventory {
 	private static class InventoryHolder{
 		private static Inventory instance = new Inventory();
 	}
-
 	/**
      * Retrieves the single instance of this class.
      */
@@ -40,8 +40,10 @@ public class Inventory {
      * 						of the inventory.
      */
 	public void load (BookInventoryInfo[ ] inventory ) {
-		booksInventoryInfo = new Vector<>();
-		this.booksInventoryInfo.addAll(Arrays.asList(inventory));
+		if(inventory.length > 0) {
+			booksInventoryInfo = new Vector<>();
+			this.booksInventoryInfo.addAll(Arrays.asList(inventory));
+		}
 	}
 	
 	/**
@@ -56,8 +58,23 @@ public class Inventory {
 			BookInventoryInfo temp = findBookByTitle(book);
 			if (temp == null)
 				return OrderResult.NOT_IN_STOCK;
-			temp.reduceAmountInInventory();
-			return OrderResult.SUCCESFULLY_TAKEN;
+			synchronized (temp) {
+				if (temp.getAmountInInventory() == 0) {
+					temp.notify();
+					return OrderResult.NOT_IN_STOCK;
+				}
+				temp.reduceAmountInInventory();
+				changePriceIfNotExist(temp);
+				temp.notify();
+				return OrderResult.SUCCESFULLY_TAKEN;
+			}
+
+	}
+
+	private void changePriceIfNotExist(BookInventoryInfo book){
+		if (book.getAmountInInventory() == 0){
+			book.changePriceToMinus();
+		}
 	}
 	
 	
@@ -98,7 +115,7 @@ public class Inventory {
      * This method is called by the main method in order to generate the output.
      */
 	public void printInventoryToFile(String filename){
-		HashMap<String,Integer> inventoryHashMap = collectionToHashMap();
+		ConcurrentHashMap<String,Integer> inventoryHashMap = collectionToHashMap();
 		if (inventoryHashMap == null)
 			return;
 		try{
@@ -117,12 +134,12 @@ public class Inventory {
 	 * Creates the HashMap, from the BookInventoryCollection, that will be written to a file later
 	 * @return	HashMap representing the info (Book Title and Amount) of every book in Inventory
 	 */
-	private HashMap<String, Integer> collectionToHashMap(){
+	private ConcurrentHashMap<String, Integer> collectionToHashMap(){
 		if(booksInventoryInfo.size() == 0)
 			return null;
-		HashMap<String, Integer> hmap = new HashMap<>();
+		ConcurrentHashMap<String, Integer> hmap = new ConcurrentHashMap<>();
 		for (BookInventoryInfo temp: booksInventoryInfo) {
-			hmap.put(temp.getBookTitle(), temp.getAmountInInventory());
+			hmap.putIfAbsent(temp.getBookTitle(), temp.getAmountInInventory());
 		}
 		return hmap;
 	}

@@ -45,6 +45,7 @@ public class DeliveryVehicle {
 		try {
 			Thread.currentThread().sleep(speed*distance);
 		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			e.printStackTrace();
 		}
 	}

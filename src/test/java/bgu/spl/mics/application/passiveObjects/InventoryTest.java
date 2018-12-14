@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.Assert.*;
 
@@ -37,6 +38,17 @@ public class InventoryTest {
         inventory.take("The secret");
         inventory.take("The secret");
         assertEquals(OrderResult.NOT_IN_STOCK, inventory.take("The secret"));
+    }
+
+    @Test
+    public void NotExistLoad()
+    {
+        BookInventoryInfo[] inventoryInfo = new BookInventoryInfo[1];
+        inventoryInfo[0] = new BookInventoryInfo("The secret", 2, 100);
+        inventory.load(inventoryInfo);
+        inventory.take("The secret");
+        inventory.take("The secret");
+        assertEquals(OrderResult.NOT_IN_STOCK, inventory.take("Harry Potter"));
     }
 
     @Test
@@ -79,15 +91,18 @@ public class InventoryTest {
         inventoryInfo[1] = new BookInventoryInfo("The secret", 4, 300);
         inventoryInfo[2] = new BookInventoryInfo("The dddddd", 2, 500);
         inventory.load(inventoryInfo);
-        inventory.printInventoryToFile("checkFile.ser");
+        inventory.take("Harry Potter");
+        inventory.take("Harry Potter");
+        inventory.printInventoryToFile("checkFile.txt");
 
 
-        HashMap<Integer, String> map = null;
+
+        ConcurrentHashMap<Integer, String> map = null;
         try
         {
-            FileInputStream fis = new FileInputStream("checkFile.ser");
+            FileInputStream fis = new FileInputStream("checkFile.txt");
             ObjectInputStream ois = new ObjectInputStream(fis);
-            map = (HashMap) ois.readObject();
+            map = (ConcurrentHashMap<Integer, String>) ois.readObject();
             ois.close();
             fis.close();
         }catch(IOException ioe)

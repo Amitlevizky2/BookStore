@@ -1,8 +1,12 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 /**
  * Passive object representing the store finance management. 
@@ -67,7 +71,18 @@ public class MoneyRegister {
      * This method is called by the main method in order to generate the output.. 
      */
 	public void printOrderReceipts(String filename) {
-		//TODO: Implement this
+		if (orderReceipts == null || orderReceipts.size() == 0)
+			return;
+		try{
+			FileOutputStream fos = new FileOutputStream(filename);
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(orderReceipts);
+			oos.close();
+			fos.close();
+		}catch(IOException e){
+			e.printStackTrace();
+			System.out.println("Could not write hashmap to the file");
+		}
 	}
 
     public List<OrderReceipt> getOrderReceipts() {

@@ -2,6 +2,7 @@ package bgu.spl.mics.application.passiveObjects;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive data-object representing a customer of the store.
@@ -17,7 +18,7 @@ public class Customer {
 	private int distance;
 	private List<OrderReceipt> Receipts;
 	private int creditCard;
-	private int availableCreditAmount;
+	private AtomicInteger availableCreditAmount;
 
 	public Customer(int id, String name, String address, int distance, int creditCard, int availableCreditAmount) {
 		this.id = id;
@@ -25,7 +26,7 @@ public class Customer {
 		this.address = address;
 		this.distance = distance;
 		this.creditCard = creditCard;
-		this.availableCreditAmount = availableCreditAmount;
+		this.availableCreditAmount = new AtomicInteger(availableCreditAmount);
 		Receipts = new ArrayList<>();
 	}
 
@@ -73,22 +74,21 @@ public class Customer {
      * @return Amount of money left.   
      */
 	public int getAvailableCreditAmount() {
-		// TODO Implement this
-		return 0;
-	}
+			return this.availableCreditAmount.get();
+		}
 	
 	/**
      * Retrieves this customers credit card serial number.    
      */
 	public int getCreditNumber() {
-		// TODO Implement this
-		return 0;
+		return this.creditCard;
 	}
 
 	public void chargeCustomer(int amount){
-		if(amount <= this.availableCreditAmount){
-			this.availableCreditAmount -= amount;
-		}
+		int localVal;
+		do{
+			localVal = this.availableCreditAmount.get();
+		}while(!availableCreditAmount.compareAndSet(localVal, localVal-amount));//TODO how does it solve my problam??
 	}
 	
 }

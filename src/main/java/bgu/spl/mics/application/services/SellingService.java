@@ -1,6 +1,13 @@
 package bgu.spl.mics.application.services;
 
+import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.BookOrderEvent;
+import bgu.spl.mics.application.messages.CheckAvailabilityEvent;
+import bgu.spl.mics.application.messages.CurrTickEvent;
+import bgu.spl.mics.application.messages.TerminateBroadcast;
+import bgu.spl.mics.application.passiveObjects.Customer;
+import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 
 /**
  * Selling service in charge of taking orders from customers.
@@ -13,15 +20,33 @@ import bgu.spl.mics.MicroService;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class SellingService extends MicroService{
+	MoneyRegister moneyRegister = MoneyRegister.getInstance();
 
-	public SellingService() {
-		super("Change_This_Name");
-		// TODO Implement this
+	public SellingService(String name) {
+		super(name);
 	}
 
 	@Override
 	protected void initialize() {
-		// TODO Implement this
+        subscribeBroadcast(TerminateBroadcast.class, terminateBroadcast->{
+            terminate();
+        });
+
+        subscribeEvent(BookOrderEvent.class, bookOrderEvent->{
+            Customer c = bookOrderEvent.getCustomer();
+            Future<Integer> proccessTickFuture = sendEvent(new CurrTickEvent());
+            Future<Integer> checkAvailabilityFuture = sendEvent(new CheckAvailabilityEvent(bookOrderEvent.getBookTitle()));
+            if(checkAvailabilityFuture.get() != -1)
+                synchronized (c){
+                    if (c.getAvailableCreditAmount() < checkAvailabilityFuture.get()) {
+                        complete(bookOrderEvent, null);
+                        notify();
+                        return;
+                    }
+                    moneyRegister.chargeCreditCard(c, checkAvailabilityFuture.get());
+
+                }
+        });
 		
 	}
 

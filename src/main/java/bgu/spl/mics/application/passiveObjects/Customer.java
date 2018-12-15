@@ -90,5 +90,11 @@ public class Customer {
 			localVal = this.availableCreditAmount.get();
 		}while(!availableCreditAmount.compareAndSet(localVal, localVal-amount));//TODO how does it solve my problam??
 	}
+
+	public void addReciptToList(OrderReceipt orderReceipt)
+	{
+	    if(orderReceipt != null)
+		    Receipts.add(orderReceipt);
+	}
 	
 }

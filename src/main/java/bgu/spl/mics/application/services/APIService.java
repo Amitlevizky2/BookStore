@@ -3,13 +3,10 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.BookOrderEvent;
-import bgu.spl.mics.application.messages.CurrTickEvent;
-import bgu.spl.mics.application.messages.TerminateBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.Customer;
 import bgu.spl.mics.application.passiveObjects.OrderReceipt;
 
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -25,6 +22,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class APIService extends MicroService{
 	private ConcurrentHashMap<Integer, LinkedBlockingQueue<String>> bookOrderEvents;
 	private Customer customer;
+	private int tick;
 
 	public APIService(Customer customer, ConcurrentHashMap<Integer, LinkedBlockingQueue<String>> bookOrderEvents) {
 		super("APIService" + customer.getId());
@@ -34,11 +32,13 @@ public class APIService extends MicroService{
 
 	@Override
 	protected void initialize() {
-	        subscribeBroadcast(TerminateBroadcast.class, terminateBroadcast->{
-                terminate();
-            });
+//		subscribeBroadcast(TickBroadcast.class, tickBroadCast->{
+//			this.tick = tickBroadCast.getTick();
+//		});
 
 			subscribeBroadcast(TickBroadcast.class, tickBroadcast->{
+				if (tickBroadcast.getToBeTerminated())
+					terminate();
 			int tick = tickBroadcast.getTick();
 			LinkedBlockingQueue<String> ordersOfTick = bookOrderEvents.get(tick);
 			if(ordersOfTick == null)

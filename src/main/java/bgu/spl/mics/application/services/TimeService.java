@@ -1,8 +1,6 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.CurrTickEvent;
-import bgu.spl.mics.application.messages.TerminateBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 
 import java.util.Timer;
@@ -21,7 +19,6 @@ import java.util.TimerTask;
 public class TimeService extends MicroService{
 	private int speed;
 	private int duration;
-	private Timer timer;
 	private int tick;
 
 	public TimeService(String name, int speed, int duration) {
@@ -29,33 +26,33 @@ public class TimeService extends MicroService{
 		this.speed = speed;
 		this.duration = duration;
 		this.tick = 0;
-		this.timer = new Timer();
 	}
 
 	@Override
 	protected void initialize() {
-		subscribeBroadcast(TerminateBroadcast.class, terminateBroadcast->{
-			this.terminate();
-		});
 
-		subscribeEvent(CurrTickEvent.class, currTickEvent->{
-			complete(currTickEvent, tick);
+		subscribeBroadcast(TickBroadcast.class, tickBroadcast->{
+			if(tick == tickBroadcast.getTick())
+				terminate();
 		});
-
-		timer.scheduleAtFixedRate(new TimerTask() {
+		Timer timer = new Timer();
+		TimerTask timerTask = new TimerTask() {
 			@Override
 			public void run() {
-				tick++;
-				if (tick == duration){
-					sendBroadcast(new TerminateBroadcast());
-					timer.cancel();
-				}
-				else{
-					sendBroadcast(new TickBroadcast(tick));
+				{
+					if (duration <= tick){
+						timer.cancel();
+						timer.purge();
+						sendBroadcast(new TickBroadcast(tick, true));
+					}
+					else{
+						sendBroadcast(new TickBroadcast(tick, false));
+						tick++;
+					}
 				}
 			}
-		}, 0, speed);
-
+		};
+		timer.schedule(timerTask, speed, speed);
 //		Timer timer = new Timer();
 //		timer.scheduleAtFixedRate();
 		

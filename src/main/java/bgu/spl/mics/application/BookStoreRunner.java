@@ -41,6 +41,7 @@ public class BookStoreRunner {
             threads.add(t);
         }
         Thread time = new Thread(timeService);
+        threads.add(time);
         time.start();
         for (Thread t : threads) {
             try {

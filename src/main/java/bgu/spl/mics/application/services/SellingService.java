@@ -19,21 +19,21 @@ import bgu.spl.mics.application.passiveObjects.OrderReceipt;
  */
 public class SellingService extends MicroService{
 	MoneyRegister moneyRegister = MoneyRegister.getInstance();
-
+	int tick;
 	public SellingService(String name) {
 		super(name);
 	}
 
 	@Override
 	protected void initialize() {
-        subscribeBroadcast(TerminateBroadcast.class, terminateBroadcast->{
-            terminate();
+        subscribeBroadcast(TickBroadcast.class, tickBroadcast-> {
+            if (tickBroadcast.getToBeTerminated())
+                terminate();
         });
+
 
         subscribeEvent(BookOrderEvent.class, bookOrderEvent->{
             Customer c = bookOrderEvent.getCustomer();
-            Future<Integer> proccessTickFuture = sendEvent(new CurrTickEvent());
-            Future<Integer> issuedTick;
             Future<Integer> checkAvailabilityFuture = sendEvent(new CheckAvailabilityEvent(bookOrderEvent.getBookTitle()));
             if(checkAvailabilityFuture.get() != -1) {
                 if (c.getAvailableCreditAmount() < checkAvailabilityFuture.get()) {
@@ -43,9 +43,8 @@ public class SellingService extends MicroService{
                 Future<Boolean> takeBookFuture = sendEvent(new TakeBookEvent(bookOrderEvent.getBookTitle()));
                 if (takeBookFuture.get()) {
                     moneyRegister.chargeCreditCard(c, checkAvailabilityFuture.get());
-                    issuedTick = sendEvent(new CurrTickEvent());
                     OrderReceipt orderReceipt = new OrderReceipt(0, this.getName(), c.getId(), bookOrderEvent.getBookTitle(),
-                            checkAvailabilityFuture.get(), bookOrderEvent.getTimeTick(), proccessTickFuture.get(), issuedTick.get());
+                            checkAvailabilityFuture.get(), bookOrderEvent.getTimeTick(),this.tick, this.tick);
                     complete(bookOrderEvent, orderReceipt);
                     moneyRegister.file(orderReceipt);
                     sendEvent(new DeliveryEvent(c.getDistance(), c.getAddress()));

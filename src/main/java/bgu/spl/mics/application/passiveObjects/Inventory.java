@@ -115,7 +115,7 @@ public class Inventory {
      * This method is called by the main method in order to generate the output.
      */
 	public void printInventoryToFile(String filename){
-		ConcurrentHashMap<String,Integer> inventoryHashMap = collectionToHashMap();
+		HashMap<String,Integer> inventoryHashMap = collectionToHashMap();
 		if (inventoryHashMap == null)
 			return;
 		try{
@@ -134,10 +134,10 @@ public class Inventory {
 	 * Creates the HashMap, from the BookInventoryCollection, that will be written to a file later
 	 * @return	HashMap representing the info (Book Title and Amount) of every book in Inventory
 	 */
-	private ConcurrentHashMap<String, Integer> collectionToHashMap(){
+	private HashMap<String, Integer> collectionToHashMap(){
 		if(booksInventoryInfo.size() == 0)
 			return null;
-		ConcurrentHashMap<String, Integer> hmap = new ConcurrentHashMap<>();
+		HashMap<String, Integer> hmap = new HashMap<>();
 		for (BookInventoryInfo temp: booksInventoryInfo) {
 			hmap.putIfAbsent(temp.getBookTitle(), temp.getAmountInInventory());
 		}

@@ -1,7 +1,5 @@
 package bgu.spl.mics;
 
-import bgu.spl.mics.application.messages.TerminateBroadcast;
-
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -79,8 +77,6 @@ public class MessageBusImpl implements MessageBus {
 			LinkedBlockingDeque<Message> tempMicroQueue = microServiceQueueMap.get(m);
             if (tempMicroQueue == null)
                 return;
-            if (msg.getClass() == TerminateBroadcast.class)
-            	tempMicroQueue.addFirst(msg);
             else {
 				try {
 					tempMicroQueue.put(msg);

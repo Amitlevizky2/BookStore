@@ -4,6 +4,7 @@ package bgu.spl.mics.application.passiveObjects;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -17,7 +18,7 @@ import java.util.Vector;
  * <p>
  * You can add ONLY private fields and methods to this class as you see fit.
  */
-public class MoneyRegister {
+public class MoneyRegister implements Serializable {
     private int totalEarnings;
     private List<OrderReceipt> orderReceipts;
 
@@ -71,7 +72,7 @@ public class MoneyRegister {
      * This method is called by the main method in order to generate the output.. 
      */
 	public void printOrderReceipts(String filename) {
-		if (orderReceipts == null || orderReceipts.size() == 0)
+		if (orderReceipts == null)
 			return;
 		try{
 			FileOutputStream fos = new FileOutputStream(filename);

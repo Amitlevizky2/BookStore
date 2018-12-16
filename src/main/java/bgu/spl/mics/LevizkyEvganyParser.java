@@ -54,7 +54,7 @@ public class LevizkyEvganyParser {
         private int inventoryService;
         private int logistics;
         private int resourcesService;
-        private List<Cust> customers;
+        private Cust[] customers;
 
         public class TimeServ{
             private int speed;
@@ -115,6 +115,7 @@ public class LevizkyEvganyParser {
             public class OrderSchedule {
                 private String bookTitle;
                 private int tick;
+
                 public String getBookTitle() {
                     return bookTitle;
                 }
@@ -148,7 +149,7 @@ public class LevizkyEvganyParser {
                 return address;
             }
         }
-        public List<Cust> getCustomers() {
+        public Cust[] getCustomers() {
             return customers;
         }
     }

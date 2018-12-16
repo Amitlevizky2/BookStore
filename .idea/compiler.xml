@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="spl191BookStore" />
         <module name="SPL_PROJECT_2-" />
+        <module name="SPL_PROJECT_2-2" />
       </profile>
     </annotationProcessing>
   </component>

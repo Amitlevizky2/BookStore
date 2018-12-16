@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Vector;
 
 public class LevizkyEvganyParser {
-    private List<InitialInventory> initialInventory;
+    private InitialInventory[] initialInventory;
     private List<InitialResources> initialResources;
     private Services services;
-    private List<Cust> customers;
+
 
     public class InitialInventory {
         private String bookTitle;
@@ -54,6 +54,7 @@ public class LevizkyEvganyParser {
         private int inventoryService;
         private int logistics;
         private int resourcesService;
+        private List<Cust> customers;
 
         public class TimeServ{
             private int speed;
@@ -87,64 +88,74 @@ public class LevizkyEvganyParser {
         public int getResourcesService() {
             return resourcesService;
         }
+
+        public class Cust {
+            private int id;
+            private String name;
+            private String address;
+            private int distance;
+            private CreditCard creditCard;
+            private List<OrderSchedule> orderSchedule;
+
+            public class CreditCard {
+                private int number;
+                private int amount;
+                public int getNumber() {
+                    return number;
+                }
+
+                public int getAmount() {
+                    return amount;
+                }
+
+
+
+            }
+
+            public class OrderSchedule {
+                private String bookTitle;
+                private int tick;
+                public String getBookTitle() {
+                    return bookTitle;
+                }
+
+                public int getTick() {
+                    return tick;
+                }
+            }
+
+            public int getId() {
+                return id;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public int getDistance() {
+                return distance;
+            }
+
+            public CreditCard getCreditCard() {
+                return creditCard;
+            }
+
+            public List<OrderSchedule> getOrderSchedule() {
+                return orderSchedule;
+            }
+
+            public String getAddress() {
+                return address;
+            }
+        }
+        public List<Cust> getCustomers() {
+            return customers;
+        }
     }
 
-    public class Cust {
-        private int id;
-        private String name;
-        private int distance;
-        private CreditCard creditCard;
-        private List<OrderSchedule> orderSchedule;
-
-        public class CreditCard {
-            private int number;
-            private int amount;
-            public int getNumber() {
-                return number;
-            }
-
-            public int getAmount() {
-                return amount;
-            }
 
 
-
-        }
-
-        public class OrderSchedule {
-            private String bookTitle;
-            private int tick;
-            public String getBookTitle() {
-                return bookTitle;
-            }
-
-            public int getTick() {
-                return tick;
-            }
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public int getDistance() {
-            return distance;
-        }
-
-        public CreditCard getCreditCard() {
-            return creditCard;
-        }
-
-        public List<OrderSchedule> getOrderSchedule() {
-            return orderSchedule;
-        }
-    }
-
-    public List<InitialInventory> getInitialInventorie() {
+    public InitialInventory[] getInitialInventory() {
         return initialInventory;
     }
 
@@ -156,7 +167,5 @@ public class LevizkyEvganyParser {
         return services;
     }
 
-    public List<Cust> getCustomers() {
-        return customers;
-    }
+
 }

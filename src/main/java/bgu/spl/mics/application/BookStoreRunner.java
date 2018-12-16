@@ -1,16 +1,15 @@
 package bgu.spl.mics.application;
 
 import bgu.spl.mics.LevizkyEvganyParser;
+import bgu.spl.mics.LevizkyEvganyParser.*;
+import bgu.spl.mics.LevizkyEvganyParser.InitialResources.Vehicle;
 import bgu.spl.mics.application.passiveObjects.BookInventoryInfo;
+import bgu.spl.mics.application.passiveObjects.Inventory;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.lang.reflect.Array;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.LinkedList;
+import java.util.Vector;
 
 /** This is the Main class of the application. You should parse the input file,
  * create the different instances of the objects, and run the system.
@@ -28,15 +27,27 @@ public class BookStoreRunner {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        List<LevizkyEvganyParser.InitialInventory> initialInventorie = dataFromJson.getInitialInventorie();
-        BookInventoryInfo[] books = new BookInventoryInfo[dataFromJson.getInitialInventorie().size()];
-        for (LevizkyEvganyParser.InitialInventory initiateInventory: initialInventorie) {
 
-        }
-
-//        loadInitialInvemtory(dataFromJson.getInitialInventorie());
-//        loadInitialResources(dataFromJson.getInitialResources());
+        loadInitialInvemtory(dataFromJson.getInitialInventory());
+        loadInitialResources(dataFromJson.getInitialResources().get(0).getVehicles());
 //        initiateServices();
 //        initiateCustomers(dataFromJson.getCustomers());
+    }
+
+    private static void loadInitialResources(Vector<Vehicle> initialResourcesToLoad) {
+        LinkedList<Vehicle> vehicles = new LinkedList<>();
+        for (Vehicle vehicle :initialResourcesToLoad) {
+            vehicles.add(new Vehicle(vehicle.getLicense(), vehicle.getSpeed()));
+        }
+    }
+
+    private static void loadInitialInvemtory(InitialInventory[] initialInventory) {
+        if(initialInventory == null)
+            return;
+        BookInventoryInfo[] books = new BookInventoryInfo[initialInventory.length];
+        for (int i = 0; i < books.length; i++) {
+            books[i] = new BookInventoryInfo(initialInventory[i].getBookTitle(), initialInventory[i].getAmount(), initialInventory[i].getPrice());
+        }
+        Inventory.getInstance().load(books);
     }
 }

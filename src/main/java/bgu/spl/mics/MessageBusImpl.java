@@ -118,6 +118,7 @@ public class MessageBusImpl implements MessageBus {
 						addMessageToMicroService(e, m);
 					}
 					LinkedBlockingDeque<Future> tempFutureQueue = microServiceFutureMap.get(m);
+					//if(f1!= null && tempFutureQueue!= null)
 					tempFutureQueue.add(f1);
 
 					return f1;

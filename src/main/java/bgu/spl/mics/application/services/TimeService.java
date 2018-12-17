@@ -40,6 +40,7 @@ public class TimeService extends MicroService{
 			@Override
 			public void run() {
 				{
+					//System.out.println(tick);
 					if (duration <= tick){
 						timer.cancel();
 						timer.purge();

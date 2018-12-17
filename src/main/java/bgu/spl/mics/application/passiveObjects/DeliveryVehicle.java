@@ -31,7 +31,7 @@ public class DeliveryVehicle {
      * @return Number of ticks needed for 1 Km.
      */
 	public int getSpeed() {
-		return 0;//TODO:Need to calculate it by ticks
+		return speed;
 	}
 	
 	/**
@@ -43,7 +43,8 @@ public class DeliveryVehicle {
      */
 	public void deliver(String address, int distance) {
 		try {
-			Thread.currentThread().sleep(speed*distance);
+			//Thread.currentThread().sleep(speed*distance);
+			Thread.currentThread().sleep(100);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			e.printStackTrace();

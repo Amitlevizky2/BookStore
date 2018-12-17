@@ -32,14 +32,20 @@ public class InventoryService extends MicroService{
                 });
 
         subscribeEvent(CheckAvailabilityEvent.class, checkAvailabilityEvent->{
-            complete(checkAvailabilityEvent, inventory.checkAvailabiltyAndGetPrice(checkAvailabilityEvent.getBookTitle()));
+            int bookPrice = inventory.checkAvailabiltyAndGetPrice(checkAvailabilityEvent.getBookTitle());
+            if(checkAvailabilityEvent.getAvailableAmount() >= bookPrice) {
+                inventory.take(checkAvailabilityEvent.getBookTitle());
+                complete(checkAvailabilityEvent, bookPrice);
+            }
+            else
+                complete(checkAvailabilityEvent, -1);
         });
 
-        subscribeEvent(TakeBookEvent.class, takeBookEvent->{
-            if (inventory.take(takeBookEvent.getBookTitle()) == OrderResult.SUCCESFULLY_TAKEN)
-                complete(takeBookEvent, true);
-            complete(takeBookEvent, false);
-        });
+//        subscribeEvent(TakeBookEvent.class, takeBookEvent->{
+//            if (inventory.take(takeBookEvent.getBookTitle()) == OrderResult.SUCCESFULLY_TAKEN)
+//                complete(takeBookEvent, true);
+//            complete(takeBookEvent, false);
+//        });
 
 
 	}

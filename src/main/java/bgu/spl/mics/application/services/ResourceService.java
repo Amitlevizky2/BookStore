@@ -2,8 +2,7 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.AcquireVehicleEvent;
-import bgu.spl.mics.application.messages.ReleseVehicleEvent;
+import bgu.spl.mics.application.messages.ResourceDeliveryEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
@@ -32,14 +31,16 @@ public class ResourceService extends MicroService{
                 terminate();
         });
 
-
-        subscribeEvent(AcquireVehicleEvent.class, acquireVehicleEvent->{
+        subscribeEvent(ResourceDeliveryEvent.class, resourceDeliveryEvent->{
             Future<DeliveryVehicle> deliveryVehicleFuture = resourcesHolder.acquireVehicle();
-            complete(acquireVehicleEvent, deliveryVehicleFuture.get());
-        });
-
-        subscribeEvent(ReleseVehicleEvent.class, releseVehicleEvent->{
-            resourcesHolder.releaseVehicle(releseVehicleEvent.getDeliveryVehicle());
+            if(deliveryVehicleFuture != null){
+                DeliveryVehicle deliveryVehicle = deliveryVehicleFuture.get();
+                if(deliveryVehicle != null){
+                    deliveryVehicle.deliver(resourceDeliveryEvent.getAddress(), resourceDeliveryEvent.getDistance());
+                    //System.out.println("asdasdasdasdasdasdasdasdasd");
+                    resourcesHolder.releaseVehicle(deliveryVehicle);
+                }
+            }
         });
 		
 	}

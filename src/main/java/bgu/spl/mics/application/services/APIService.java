@@ -48,6 +48,7 @@ public class APIService extends MicroService{
                 String bookToOrder="";
 				try {
 					bookToOrder = ordersOfTick.take();
+					/////////////////////////////////////////////System.out.println(bookToOrder);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}

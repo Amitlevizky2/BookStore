@@ -5,9 +5,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
+
 
 /**
  * Passive object representing the store finance management. 
@@ -21,6 +20,7 @@ import java.util.Vector;
 public class MoneyRegister implements Serializable {
     private int totalEarnings;
     private List<OrderReceipt> orderReceipts;
+    private int orderId;
 
 	private static class SingeltonHolder{
         private static MoneyRegister instance = new MoneyRegister();
@@ -28,7 +28,8 @@ public class MoneyRegister implements Serializable {
 
     private MoneyRegister() {
         totalEarnings = 0;
-        orderReceipts = new ArrayList<>();
+        orderId = 1;
+        orderReceipts = Collections.synchronizedList(new ArrayList<>());
     }
 
     /**
@@ -45,7 +46,9 @@ public class MoneyRegister implements Serializable {
      */
 	public void file (OrderReceipt r) {
 		if (r != null) {
+			r.setOrderId(orderId);
 			orderReceipts.add(r);
+			orderId++;
 		}
 	}
 	

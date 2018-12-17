@@ -16,6 +16,9 @@ public class MessageBusImpl implements MessageBus {
 	private Map<Message, Future> eventFutureMap;
 	private Map<MicroService, LinkedBlockingDeque<Future>> microServiceFutureMap;
 	private Object obj = new Object();
+	private Object obj1 = new Object();
+	private Object obj2 = new Object();
+	private Object obj3 = new Object();
 
     private static class MessageBusSingelton{
         private static MessageBusImpl instance = new MessageBusImpl();
@@ -63,14 +66,16 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void sendBroadcast(Broadcast b) {
-        if(b == null)
-            return;
+		synchronized (obj1){
+		if (b == null)
+			return;
 		Queue<MicroService> tempMicroServiceQueue = roundRobinMap.get(b.getClass());
 		if (tempMicroServiceQueue == null)
-		    return;
-        for (MicroService micro: tempMicroServiceQueue) {
-                 addMessageToMicroService(b, micro);
-             }
+			return;
+		for (MicroService micro : tempMicroServiceQueue) {
+			addMessageToMicroService(b, micro);
+		}
+	}
 
 	}
 	private void addMessageToMicroService(Message msg, MicroService m){
@@ -84,32 +89,41 @@ public class MessageBusImpl implements MessageBus {
 					e.printStackTrace();
 				}
 			}
-
     }
 
 	
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
-        MicroService m = null;
-		LinkedBlockingDeque<MicroService> tempMicroServiceQueue = roundRobinMap.get(e.getClass());
-		if (tempMicroServiceQueue == null || tempMicroServiceQueue.isEmpty())
-		    return null;
+    	synchronized (obj1) {
+    	//	synchronized (obj2) {
+				MicroService m = null;
+				synchronized (obj2){
+				LinkedBlockingDeque<MicroService> tempMicroServiceQueue = roundRobinMap.get(e.getClass());
+				//synchronized (tempMicroServiceQueue) {
+					if (tempMicroServiceQueue == null || tempMicroServiceQueue.isEmpty())
+						return null;
 
-        try {
-            m = tempMicroServiceQueue.take();
-            tempMicroServiceQueue.put(m);
-        } catch (InterruptedException e1) {
-            e1.printStackTrace();
-        }
-		Future<T> f1 = new Future<>();
+					try {
+						m = tempMicroServiceQueue.take();
+						//System.out.println(m.getName());
+						//System.out.println(e.getClass() + "\n");
+						tempMicroServiceQueue.put(m);
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
+					Future<T> f1 = new Future<>();
 
-		if (m != null) {
-			eventFutureMap.putIfAbsent(e, f1);
-			addMessageToMicroService(e, m);
-		}
-		LinkedBlockingDeque<Future> tempFutureQueue =  microServiceFutureMap.get(m);
-		tempFutureQueue.add(f1);
-		return f1;
+					if (m != null) {
+						eventFutureMap.putIfAbsent(e, f1);
+						addMessageToMicroService(e, m);
+					}
+					LinkedBlockingDeque<Future> tempFutureQueue = microServiceFutureMap.get(m);
+					tempFutureQueue.add(f1);
+
+					return f1;
+				}
+			}
+
 	}
 
 	@Override

@@ -9,6 +9,7 @@
         <module name="spl191BookStore" />
         <module name="SPL_PROJECT_2-" />
         <module name="SPL_PROJECT_2-2" />
+        <module name="SPL_PROJECT_2-3" />
       </profile>
     </annotationProcessing>
   </component>

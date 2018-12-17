@@ -27,6 +27,7 @@ public class SellingService extends MicroService{
 	@Override
 	protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, tickBroadcast-> {
+            tick = tickBroadcast.getTick();
             if (tickBroadcast.getToBeTerminated())
                 terminate();
         });
@@ -34,23 +35,26 @@ public class SellingService extends MicroService{
 
         subscribeEvent(BookOrderEvent.class, bookOrderEvent->{
             Customer c = bookOrderEvent.getCustomer();
-            Future<Integer> checkAvailabilityFuture = sendEvent(new CheckAvailabilityEvent(bookOrderEvent.getBookTitle()));
-            if(checkAvailabilityFuture.get() != -1) {
+            Future<Integer> checkAvailabilityFuture = sendEvent(new CheckAvailabilityEvent(bookOrderEvent.getBookTitle(), c.getAvailableCreditAmount()));
+            if(checkAvailabilityFuture.get() != null && checkAvailabilityFuture.get() != -1) {
                 if (c.getAvailableCreditAmount() < checkAvailabilityFuture.get()) {
                     complete(bookOrderEvent, null);
                     return;
                 }
-                Future<Boolean> takeBookFuture = sendEvent(new TakeBookEvent(bookOrderEvent.getBookTitle()));
-                if (takeBookFuture.get()) {
+                //Future<Integer> bookPriceFurture = sendEvent(new C(bookOrderEvent.getBookTitle()));
+                //////////////////////////////System.out.println(takeBookFuture.get())
                     moneyRegister.chargeCreditCard(c, checkAvailabilityFuture.get());
                     OrderReceipt orderReceipt = new OrderReceipt(0, this.getName(), c.getId(), bookOrderEvent.getBookTitle(),
-                            checkAvailabilityFuture.get(), bookOrderEvent.getTimeTick(),this.tick, this.tick);
-                    complete(bookOrderEvent, orderReceipt);
+                            checkAvailabilityFuture.get(), this.tick,bookOrderEvent.getTimeTick(), this.tick);
+//                    System.out.println("orderIs= " + orderReceipt.getOrderId() + " customername: "+ orderReceipt.getSeller()
+//                            + " bookTitle: "+ orderReceipt.getBookTitle() + " price: "+ orderReceipt.getPrice() + " issudTick: "+ orderReceipt.getIssuedTick()
+//                    + " orcerTick: "+ orderReceipt.getOrderTick() + " proccessTick: "+ orderReceipt.getProcessTick());
                     moneyRegister.file(orderReceipt);
+                    complete(bookOrderEvent, orderReceipt);
                     sendEvent(new DeliveryEvent(c.getDistance(), c.getAddress()));
                     return;
                 }
-            }
+
             complete(bookOrderEvent, null);
 
         });

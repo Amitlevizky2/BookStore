@@ -2,9 +2,8 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.AcquireVehicleEvent;
 import bgu.spl.mics.application.messages.DeliveryEvent;
-import bgu.spl.mics.application.messages.ReleseVehicleEvent;
+import bgu.spl.mics.application.messages.ResourceDeliveryEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
 
@@ -30,12 +29,9 @@ public class LogisticsService extends MicroService {
         });
 
         subscribeEvent(DeliveryEvent.class, deliveryEvent->{
-            Future<DeliveryVehicle> deliveryVehicleFuture = sendEvent(new AcquireVehicleEvent());
-            if (deliveryVehicleFuture.get() != null){
-                deliveryVehicleFuture.get().deliver(deliveryEvent.getAddress(), deliveryEvent.getDistance());
-                sendEvent(new ReleseVehicleEvent(deliveryVehicleFuture.get()));
+                sendEvent(new ResourceDeliveryEvent(deliveryEvent.getAddress(), deliveryEvent.getDistance()));
             }
-        });
+        );
 		
 	}
 

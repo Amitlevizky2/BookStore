@@ -56,11 +56,33 @@ public class BookStoreRunner {
             e.printStackTrace();
         }
         printToFile(args[1], customerHashMap);
-//        customersFile(args[0], customerHashMap);
         Inventory.getInstance().printInventoryToFile(args[2]);
         MoneyRegister.getInstance().printOrderReceipts(args[3]);
         printToFile(args[4], MoneyRegister.getInstance());
-//        MoneyRegisterFile(args[3], MoneyRegister.getInstance());
+
+
+
+
+
+        ////////////////////////////////////////////////////////////////////////////////////
+        try{
+            List<OrderReceipt> or = getRecipts(args[3]);
+            System.out.println("amount of orders "+or.size());
+        }catch (IOException e){
+            e.printStackTrace();
+        }catch (ClassNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private static List<OrderReceipt> getRecipts(String reciptObj) throws FileNotFoundException, IOException, ClassNotFoundException{
+        FileInputStream fio = new FileInputStream(reciptObj);
+        ObjectInputStream in = new ObjectInputStream(fio);
+        List<OrderReceipt> recipts = (List<OrderReceipt>) in.readObject();
+        in.close();
+        fio.close();
+        return recipts;
     }
 
     private static void printToFile(String arg, Object o) {
@@ -172,4 +194,6 @@ public class BookStoreRunner {
         }
         Inventory.getInstance().load(books);
     }
+
+
 }

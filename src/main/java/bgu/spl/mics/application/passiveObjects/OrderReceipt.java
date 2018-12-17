@@ -89,4 +89,8 @@ public class OrderReceipt implements Serializable {
 	public int getProcessTick() {
 		return proccessTick;
 	}
+
+	public void setOrderId(int order) {
+		this.orderId = order;
+	}
 }
